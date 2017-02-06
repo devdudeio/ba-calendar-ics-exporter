@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.js"
+            integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA=" crossorigin="anonymous"></script>
+    <script src="node_modules/moment/moment.js"></script>
+    <script src="node_modules/file-saver/FileSaver.js"></script>
+
+</head>
+<body>
+
+
+</body>
+
+
+<script>
+    //warning ugly javascript is coming
+
+    var calendar;
+
+
+    let start = "1486335600";
+    let end = "1486940400";
+    let hash = ""; //hash
+    let matrikel = ""; //matrikelnummer (ohne s)
+
+
+    $.ajax({
+        url: `https://selfservice.campus-dual.de/room/json?userid=${matrikel}&hash=${hash}&start=${start}&end=${end}&_=1484217696710`,
+        success: function (result) {
+
+            calendar = result;
+            update(calendar);
+        },
+        error: function(){
+            alert("FU :D");
+        }
+    });
+
+
+    function generate_link(_entry){
+        let encoded = btoa(_entry);
+        let link = `<a href="data:text/calendar;charset=utf-8;base64,${encoded}" download="BA-Dresden.ics">Download ICS</a>`;
+        document.body.innerHTML += link;
+    }
+
+    function save_file(_entry){
+        var file = new File([_entry], "ba.ics", {type: "text/calendar;charset=utf-8"});
+        saveAs(file);
+    }
+
+    function update(_calendar) {
+        let cal_start = "BEGIN:VCALENDAR\r\nMETHOD:PUBLISH\r\nVERSION:2.0\r\nX-WR-CALNAME:BA-Dresden\r\nPRODID:-//Apple Inc.//Mac OS X 10.12.2//EN\r\nX-APPLE-CALENDAR-COLOR:#1BADF8\r\nX-WR-TIMEZONE:Europe/Berlin\r\nCALSCALE:GREGORIAN\r\n";
+        let tz = "BEGIN:VTIMEZONE\r\nTZID:Europe/Berlin\r\nBEGIN:DAYLIGHT\r\nTZOFFSETFROM:+0100\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\nDTSTART:19810329T020000\r\nTZNAME:MESZ\r\nTZOFFSETTO:+0200\r\nEND:DAYLIGHT\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0200\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\nDTSTART:19961027T030000\r\nTZNAME:MEZ\r\nTZOFFSETTO:+0100\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n";
+
+
+        let entry = "";
+        let cal_end = "END:VCALENDAR\r\n";
+        let UID = 0;
+        _calendar.forEach(function (e) {
+
+
+            let _start = moment(e.start*1000).format("YYYYMMDDTHHmmss");
+            let _end = moment(e.end*1000).format("YYYYMMDDTHHmmss");
+            let _now = "1484229300000";
+
+            entry += tz;
+            entry += "BEGIN:VEVENT\r\n";
+            entry += `CREATED:20170112T132141Z\r\n`;
+            entry += `UID:${UID}\r\n`;
+            entry += `DTEND;TZID=Europe/Berlin:${_end}\r\n`;
+            entry += `TRANSP:OPAQUE\r\n`;
+            entry += `X-APPLE-TRAVEL-ADVISORY-BEHAVIOR:AUTOMATIC\r\n`;
+            entry += `ORGANIZER;CN="${e.instructor}"\r\n`;
+            entry += `SUMMARY:${e.title}\r\n`;
+            entry += `DESCRIPTION:${e.instructor} - ${e.description} - ${e.remarks}\r\n`;
+            entry += `DTSTART;TZID=Europe/Berlin:${_start}\r\n`;
+            entry += `DTSTAMP:20170112T132146Z\r\n`;
+            entry += `SUMMARY:${e.title}\r\n`;
+            entry += `LOCATION:${e.room}\r\n`;
+            entry += `SEQUENCE:0\r\n`;
+            entry += `END:VEVENT\r\n`;
+            UID++;
+
+
+
+
+
+
+            /*
+
+
+             entry += `CREATED:20170112T132141Z`
+             entry += `UID:${start}`
+             entry += `DTEND;TZID=Europe/Berlin:${end}`
+             entry += `TRANSP:OPAQUE`
+             entry += `X-APPLE-TRAVEL-ADVISORY-BEHAVIOR:AUTOMATIC`
+             entry += `SUMMARY:SCHNITZEL`
+             entry += `DTSTART;TZID=Europe/Berlin:${start}`
+             entry += `DTSTAMP:20170112T132146Z`
+             entry += `SEQUENCE:0`
+             entry += `END:VEVENT`
+
+
+
+             */
+
+
+
+
+        });
+
+        entry = cal_start + entry + cal_end;
+
+        save_file(entry);
+
+
+        //generate_link(entry);
+       // document.body.innerText += entry;
+    }
+
+</script>
+</html>
